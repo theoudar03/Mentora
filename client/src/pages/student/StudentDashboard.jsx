@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { checkWeeklyStatus } from '../../api/assessmentApi';
-import { changePassword } from '../../api/studentApi';
+import { changePassword, getPasswordStatus } from '../../api/studentApi';
+import { Eye, EyeOff, Loader2, ShieldCheck, Clock } from 'lucide-react';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -13,9 +14,14 @@ const StudentDashboard = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState('');
   const [isSubmittingPw, setIsSubmittingPw] = useState(false);
+  const [pwStatus, setPwStatus] = useState(null);
+  const [isLoadingPw, setIsLoadingPw] = useState(true);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -34,6 +40,8 @@ const StudentDashboard = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      // Refresh status to immediately lock down
+      fetchPwStatus();
     } catch (err) {
       setPwError(err.response?.data?.message || 'Error changing password.');
     } finally {
@@ -54,7 +62,20 @@ const StudentDashboard = () => {
       }
     };
     fetchStatus();
+    fetchPwStatus();
   }, []);
+
+  const fetchPwStatus = async () => {
+    try {
+      setIsLoadingPw(true);
+      const res = await getPasswordStatus();
+      setPwStatus(res.data);
+    } catch (err) {
+      console.error('Failed to load password status', err);
+    } finally {
+      setIsLoadingPw(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -135,52 +156,135 @@ const StudentDashboard = () => {
       </div>
 
       {/* Password Change Section */}
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">Settings</h3>
-        <p className="text-slate-500 text-sm mb-6">Update your account security parameters.</p>
+      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-2 h-full bg-slate-900"></div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="w-5 h-5 text-slate-700" />
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Account Security</h3>
+            </div>
+            <p className="text-slate-500 text-sm">Manage your secure credentials.</p>
+          </div>
+          
+          {isLoadingPw ? (
+            <div className="h-8 w-32 bg-slate-100 animate-pulse rounded-full"></div>
+          ) : pwStatus?.canChange ? (
+            <div className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Eligible to change
+            </div>
+          ) : (
+            <div className="bg-amber-50 text-amber-700 border border-amber-200/60 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 shadow-sm">
+              <Clock className="w-4 h-4" />
+              Available in {pwStatus?.remainingDays} days
+            </div>
+          )}
+        </div>
+
+        <div className="bg-slate-50 rounded-xl p-4 mb-8 border border-slate-100 flex items-center justify-between text-sm">
+          <div className="text-slate-600">
+            <span className="font-semibold text-slate-800">Last changed:</span> {pwStatus?.lastChangedAt || 'Recently'}
+          </div>
+          <div className="text-slate-600">
+            <span className="font-semibold text-slate-800">Next eligible:</span> {pwStatus?.nextEligibleDate || 'Calculating...'}
+          </div>
+        </div>
         
-        {pwError && <div className="mb-6 text-sm text-rose-600 bg-rose-50 p-4 rounded-xl border border-rose-100 font-medium">{pwError}</div>}
-        {pwSuccess && <div className="mb-6 text-sm text-emerald-600 bg-emerald-50 p-4 rounded-xl border border-emerald-100 font-medium">{pwSuccess}</div>}
+        {pwError && <div className="mb-6 text-sm text-rose-600 bg-rose-50 p-4 rounded-xl border border-rose-100 font-medium animate-in fade-in zoom-in-95">{pwError}</div>}
+        {pwSuccess && <div className="mb-6 text-sm text-emerald-600 bg-emerald-50 p-4 rounded-xl border border-emerald-100 font-medium animate-in fade-in zoom-in-95">{pwSuccess}</div>}
         
-        <form onSubmit={handlePasswordChange} className="max-w-md space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Current Password</label>
-            <input 
-              type="password" 
-              required
-              value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
+        {!pwStatus?.canChange && !isLoadingPw ? (
+          <div className="max-w-md bg-white border border-slate-200 p-6 rounded-xl text-center shadow-sm">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="w-6 h-6 text-slate-400" />
+            </div>
+            <h4 className="font-semibold text-slate-800 mb-2">Password Locked</h4>
+            <p className="text-sm text-slate-500">
+              For security reasons, your password can only be updated once every 14 days. Please check back later.
+            </p>
+            <button disabled className="mt-6 w-full py-3 px-4 rounded-xl font-semibold bg-slate-100 text-slate-400 cursor-not-allowed">
+              Change Password
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">New Password</label>
-            <input 
-              type="password" 
-              required
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Confirm New Password</label>
-            <input 
-              type="password" 
-              required
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-            />
-          </div>
-          <button 
-            type="submit" 
-            disabled={isSubmittingPw}
-            className={`w-full py-3 px-4 rounded-xl text-white font-semibold transition-all ${isSubmittingPw ? 'bg-indigo-400 cursor-wait' : 'bg-slate-900 hover:bg-slate-800 shadow-sm'}`}
-          >
-            {isSubmittingPw ? 'Saving...' : 'Update Password'}
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handlePasswordChange} className="max-w-md space-y-5">
+            <div className="relative">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Current Password</label>
+              <div className="relative">
+                <input 
+                  type={showCurrentPassword ? "text" : "password"} 
+                  required
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                />
+                <button 
+                  type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                  {showCurrentPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                </button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">New Password</label>
+              <div className="relative">
+                <input 
+                  type={showNewPassword ? "text" : "password"} 
+                  required
+                  minLength="6"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                />
+                <button 
+                  type="button" onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                  {showNewPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                </button>
+              </div>
+              {newPassword && (
+                <div className="mt-2 flex gap-1 h-1.5">
+                  <div className={`flex-1 rounded-full transition-all ${newPassword.length > 0 ? 'bg-amber-400' : 'bg-slate-200'}`}></div>
+                  <div className={`flex-1 rounded-full transition-all ${newPassword.length >= 6 ? 'bg-emerald-500' : 'bg-slate-200'}`}></div>
+                  <div className={`flex-1 rounded-full transition-all ${(newPassword.length >= 8 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)) ? 'bg-emerald-500' : 'bg-slate-200'}`}></div>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Confirm New Password</label>
+              <div className="relative">
+                <input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  required
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                />
+                <button 
+                  type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                </button>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isSubmittingPw || isLoadingPw}
+              className={`w-full py-3.5 px-4 rounded-xl text-white font-semibold transition-all shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] flex items-center justify-center gap-2 ${isSubmittingPw || isLoadingPw ? 'opacity-70 bg-slate-800 cursor-wait' : 'bg-slate-900 hover:bg-slate-800 hover:-translate-y-0.5'}`}
+            >
+              {isSubmittingPw ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</>
+              ) : 'Update Password'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
