@@ -1,19 +1,21 @@
 const Assessment = require('../models/Assessment');
+const WeeklyAssessment = require('../models/WeeklyAssessment');
 const Student = require('../models/Student');
+const User = require('../models/User');
 
 exports.getMentorDashboard = async (req, res) => {
   try {
     // 1. Fetch Students efficiently (lean execution) for the mentor's department only
     const query = req.user.role === 'welfare' ? {} : { department: req.user.department };
-    const students = await Student.find(query, 'name department').lean().exec();
+    const students = await Student.find(
+      query,
+      'name department id_num cgpa_score attendance_score academic_pressure_score anxiety_score sleep_quality_score Mental_health_Risk_Status'
+    ).lean().exec();
     
     // 2. Map student ID lookup dictionary (O(1) access)
     const studentMap = {};
     students.forEach(s => {
-      studentMap[s._id.toString()] = {
-        name: s.name,
-        department: s.department
-      };
+      studentMap[s._id.toString()] = s;
     });
 
     // 3. Fetch all assessments quickly
@@ -36,19 +38,21 @@ exports.getMentorDashboard = async (req, res) => {
     students.forEach(s => {
       const sId = s._id.toString();
       const latestAssessment = latestAssessmentsMap[sId];
-      const score = latestAssessment ? latestAssessment.Mental_health_Risk_Status : 0;
+      const score = s.Mental_health_Risk_Status || (latestAssessment ? latestAssessment.Mental_health_Risk_Status : 0);
       
-      let riskLevel = 'Stable';
-      if (score > 65) {
+      let riskLevel = 'Low';
+      console.log(`[Risk Check] Student ${s.name} (${sId}) Risk Score:`, score);
+      
+      if (score >= 70) {
         highRisk++;
         riskLevel = 'High';
         alerts.push({
           id: sId + '_alert',
           type: 'High',
           message: `${s.name} flagged as High Risk`,
-          timestamp: latestAssessment.created_at
+          timestamp: latestAssessment ? latestAssessment.created_at : new Date()
         });
-      } else if (score >= 36) {
+      } else if (score >= 40) {
         mediumRisk++;
         riskLevel = 'Medium';
       } else {
@@ -61,6 +65,7 @@ exports.getMentorDashboard = async (req, res) => {
         name: s.name,
         department: s.department,
         surveyScore: score,
+        Mental_health_Risk_Status: score,
         riskLevel: riskLevel,
         lastCheckIn: latestAssessment ? latestAssessment.created_at : null,
         timeTaken: latestAssessment ? latestAssessment.time_taken_to_attend_survey : 0
@@ -68,18 +73,20 @@ exports.getMentorDashboard = async (req, res) => {
     });
 
     // 6. Rapid Trends (group by week) using isolated lightweight execution
-    const trends = await Assessment.aggregate([
+    const trendsQuery = req.user.role === 'welfare' ? {} : { department: req.user.department };
+    const trends = await WeeklyAssessment.aggregate([
+      { $match: trendsQuery },
       {
         $group: {
-          _id: { $week: "$created_at" },
+          _id: "$week_number",
           avgScore: { $avg: "$Mental_health_Risk_Status" }
         }
       },
       { $sort: { _id: 1 } }
     ]);
     
-    const trendData = trends.map((t, idx) => ({
-      week: `Week ${idx + 1}`,
+    let trendData = trends.map(t => ({
+      week: `Week ${t._id}`,
       avgScore: Math.round(t.avgScore)
     }));
     
@@ -139,9 +146,9 @@ exports.getStudentDetails = async (req, res) => {
     // Soft AI Mock Insight based on current data
     let aiInsight = "Student metrics appear stable.";
     if (latestAssessment) {
-      if (latestAssessment.Mental_health_Risk_Status > 65) {
+      if (latestAssessment.Mental_health_Risk_Status >= 70) {
         aiInsight = `Critical high stress flags identified. Heavy impacts in academic pressure (${latestAssessment.academic_pressure_score}/5) and sleep degradation (${latestAssessment.sleep_quality_score}/5). Active intervention highly recommended.`;
-      } else if (latestAssessment.Mental_health_Risk_Status >= 36) {
+      } else if (latestAssessment.Mental_health_Risk_Status >= 40) {
         aiInsight = `Moderate stress indicated. Recommend reaching out casually regarding campus belonging (${latestAssessment.campus_belonging_score}/5).`;
       }
     }
@@ -163,5 +170,66 @@ exports.getStudentDetails = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error fetching detailed student profile', error: error.message });
+  }
+};
+
+exports.addStudent = async (req, res) => {
+  try {
+    const { id_num, name, cgpa_score, attendance_score, fee_paid_late } = req.body;
+    
+    // 1. Validation
+    if (!id_num || !name || cgpa_score == null || attendance_score == null || fee_paid_late == null) {
+      return res.status(400).json({ message: 'All student fields are required.' });
+    }
+
+    const department = req.user.department;
+
+    // 2. Check Uniqueness in both collections
+    const existingStudent = await Student.findOne({ id_num });
+    const existingUser = await User.findOne({ id_num });
+
+    if (existingStudent || existingUser) {
+      return res.status(400).json({ message: 'Student with this ID already exists.' });
+    }
+
+    // 3. Create Student doc with default values for ML integration
+    const studentDoc = await Student.create({
+      id_num,
+      name,
+      password: id_num, // raw string is fine here if schema supports it, but not used for auth
+      role: 'student',
+      department,
+      academic_pressure_score: 3,
+      anxiety_score: 2,
+      family_support_score: 4,
+      loneliness_score: 2,
+      sleep_quality_score: 4,
+      campus_belonging_score: 4,
+      perceived_stress_score: 2,
+      cgpa_score,
+      attendance_score,
+      fee_paid_late,
+      Mental_health_Risk_Status: null
+    });
+
+    // 4. Create User doc for Authentication (pre-save hook will hash the password)
+    const userDoc = new User({
+      id_num,
+      name,
+      password: id_num,
+      role: 'student',
+      department,
+      ref_id: studentDoc._id.toString()
+    });
+    
+    await userDoc.save();
+
+    res.status(201).json({
+      message: 'Student added successfully!',
+      student: studentDoc
+    });
+  } catch (error) {
+    console.error('Error adding student:', error.message);
+    res.status(500).json({ message: 'Error adding student', error: error.message });
   }
 };

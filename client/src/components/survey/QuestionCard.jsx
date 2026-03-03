@@ -14,6 +14,7 @@ const QuestionCard = ({ questionId, questionText, index, options, selectedValue,
       </div>
       
       <OptionSelector 
+        questionId={questionId}
         options={options} 
         selectedValue={selectedValue} 
         onSelect={(val) => onSelect(questionId, val)} 

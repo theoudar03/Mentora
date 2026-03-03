@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchMentorDashboard } from '../../api/mentorApi';
+import { fetchMentorDashboard, addStudent } from '../../api/mentorApi';
 import { mapMentorDashboardData } from '../../utils/dataMapper';
 import RiskSummaryCard from '../../components/cards/RiskSummaryCard';
 import RiskTrendChart from '../../components/charts/RiskTrendChart';
@@ -15,21 +15,45 @@ const MentorDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    id_num: '', name: '', cgpa_score: '', attendance_score: '', fee_paid_late: ''
+  });
+  const [addError, setAddError] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetchMentorDashboard();
+      const mappedData = mapMentorDashboardData(response.data);
+      setDashboardData(mappedData);
+    } catch (err) {
+      setError('Unable to load wellbeing data. Please refresh.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetchMentorDashboard();
-        const mappedData = mapMentorDashboardData(response.data);
-        setDashboardData(mappedData);
-      } catch (err) {
-        setError('Unable to load wellbeing data. Please refresh.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadDashboardData();
   }, []);
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setAddError('');
+    setIsAdding(true);
+    try {
+      await addStudent(addForm);
+      setShowAddModal(false);
+      setAddForm({ id_num: '', name: '', cgpa_score: '', attendance_score: '', fee_paid_late: '' });
+      await loadDashboardData();
+    } catch (err) {
+      setAddError(err.response?.data?.message || 'Error adding student');
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   if (error) {
     return (
@@ -77,6 +101,13 @@ const MentorDashboard = () => {
         </div>
         
         <div className="mt-4 md:mt-0 flex items-center gap-4">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <span className="text-lg leading-none">+</span> Add Student
+          </button>
+          
           <div className="text-right">
             <p className="text-sm font-medium text-gray-900">{user?.name || 'Dr. Mentor'}</p>
             <span className="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium inline-block mt-1">
@@ -134,6 +165,56 @@ const MentorDashboard = () => {
       <div className="w-full">
         <StudentRiskTable students={students} />
       </div>
+
+      {/* Add Student Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900">Add New Student</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
+            <div className="p-6">
+              {addError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">{addError}</div>}
+              
+              <form onSubmit={handleAddSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                  <input type="text" required value={addForm.id_num} onChange={e => setAddForm({...addForm, id_num: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 8021" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input type="text" required value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Aditya Nair" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CGPA (0-10)</label>
+                    <input type="number" step="0.1" min="0" max="10" required value={addForm.cgpa_score} onChange={e => setAddForm({...addForm, cgpa_score: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="8.5" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Attendance %</label>
+                    <input type="number" min="0" max="100" required value={addForm.attendance_score} onChange={e => setAddForm({...addForm, attendance_score: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="85" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fee Paid Late (0 = No, 1 = Yes)</label>
+                  <select required value={addForm.fee_paid_late} onChange={e => setAddForm({...addForm, fee_paid_late: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                    <option value="" disabled>Select option...</option>
+                    <option value="0">No (Paid on time)</option>
+                    <option value="1">Yes (Paid late)</option>
+                  </select>
+                </div>
+                <div className="pt-4 flex justify-end gap-3">
+                  <button type="button" onClick={() => setShowAddModal(false)} className="px-5 py-2.5 text-gray-600 font-medium hover:text-gray-900 transition-colors">Cancel</button>
+                  <button type="submit" disabled={isAdding} className={`px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl transition-colors ${isAdding ? 'opacity-70 cursor-wait' : 'hover:bg-indigo-700'}`}>
+                    {isAdding ? 'Saving...' : 'Add Student'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

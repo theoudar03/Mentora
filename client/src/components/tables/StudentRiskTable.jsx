@@ -12,17 +12,17 @@ const StudentRiskTable = ({ students }) => {
     setDrawerOpen(true);
   };
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Student Risk Overview</h2>
-        <span className="text-sm text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full font-medium">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-md">
+      <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-sm">
+        <h2 className="text-lg font-semibold text-slate-800 tracking-tight">Student Risk Overview</h2>
+        <span className="text-sm text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full font-semibold tracking-wide">
           {students.length} Monitored
         </span>
       </div>
       
       <div className="flex-1 overflow-x-auto min-h-[300px]">
         <table className="min-w-full text-sm text-left align-middle border-collapse">
-          <thead className="bg-gray-50/80 sticky top-0 border-b border-gray-100 z-10">
+          <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-100 z-10 backdrop-blur-md">
             <tr>
               <th className="px-5 py-4 font-semibold text-gray-600">Student Name</th>
               <th className="px-5 py-4 font-semibold text-gray-600">Department</th>
@@ -38,37 +38,41 @@ const StudentRiskTable = ({ students }) => {
             {students.map((student) => (
               <tr key={student.id} className="hover:bg-gray-50/50 transition-colors bg-white">
                 <td className="px-5 py-4 whitespace-nowrap">
-                  <span className="font-medium text-gray-900">{student.name}</span>
+                  <span className="font-semibold text-slate-900">{student.name}</span>
                 </td>
-                <td className="px-5 py-4 text-gray-600">{student.department}</td>
+                <td className="px-5 py-4 text-slate-500 font-medium">{student.department}</td>
                 <td className="px-5 py-4">
-                  <span className="text-gray-600 font-medium">{student.surveyScore}</span>
+                  <span className="text-slate-700 font-bold">
+                    {typeof student.Mental_health_Risk_Status === 'number' 
+                      ? student.Mental_health_Risk_Status 
+                      : (student.surveyScore || 0)}
+                  </span>
                 </td>
                 <td className="px-5 py-4 w-32">
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div 
-                      className="h-2 rounded-full bg-indigo-500 transition-all duration-1000 ease-out" 
-                      style={{ width: `${student.surveyScore}%` }}
+                      className={`h-1.5 rounded-full transition-all duration-1000 ease-out ${student.riskLevel === 'High' ? 'bg-rose-500' : student.riskLevel === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                      style={{ width: `${student.Mental_health_Risk_Status || student.surveyScore || 0}%` }}
                     ></div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <StatusBadge level={student.riskLevel} />
                 </td>
-                <td className="px-5 py-4 text-gray-500 hidden sm:table-cell">
+                <td className="px-5 py-4 text-slate-400 font-medium hidden sm:table-cell">
                   {student.lastCheckIn}
                 </td>
                 <td className="px-5 py-4 text-center">
-                  <span className={`px-2 py-1 rounded inline-block text-sm ${student.timeTaken < 30 ? 'bg-yellow-100 text-yellow-800 font-medium' : 'text-gray-600'}`}>
+                  <span className={`px-2 py-1 rounded-md inline-block text-xs uppercase tracking-wider font-bold ${student.timeTaken < 30 ? 'bg-amber-100 text-amber-800' : 'text-slate-400 bg-slate-50'}`}>
                     {student.timeTaken || '-'}s
                   </span>
                 </td>
                 <td className="px-5 py-4 text-center">
                   <button 
                     onClick={() => handleOpenDrawer(student.id)}
-                    className="text-indigo-600 font-medium hover:underline p-2 rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+                    className="text-slate-600 font-semibold hover:text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-all inline-flex items-center justify-center whitespace-nowrap border border-transparent hover:border-indigo-100"
                   >
-                    Review Student &rarr;
+                    Review
                   </button>
                 </td>
               </tr>

@@ -31,18 +31,19 @@ const RiskSummaryCard = ({ title, count, trend, type }) => {
   const config = getConfig();
 
   return (
-    <div className="flex items-center justify-between p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div>
-        <h3 className="text-sm font-medium text-gray-500 mb-1">{title}</h3>
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-gray-900">{count}</span>
-          <span className={`text-xs font-semibold ${isPositiveTrend ? 'text-green-600' : 'text-red-500'}`}>
-            {trend} this week
-          </span>
+    <div className="group flex flex-col p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+      <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full opacity-20 -mr-10 -mt-10 ${config.bgIcon} pointer-events-none`}></div>
+      <div className="flex items-center justify-between mb-4 relative z-10">
+        <h3 className="text-sm font-semibold text-slate-500 tracking-wide uppercase">{title}</h3>
+        <div className={`p-2 rounded-xl bg-slate-50/50 backdrop-blur-sm border border-slate-100 ${config.textColor}`}>
+          {config.icon}
         </div>
       </div>
-      <div className={`p-4 rounded-full ${config.bgIcon}`}>
-        {config.icon}
+      <div className="flex items-baseline gap-3 relative z-10">
+        <span className="text-4xl font-bold text-slate-900 tracking-tight">{count}</span>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${isPositiveTrend ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+          {trend} this wk
+        </span>
       </div>
     </div>
   );

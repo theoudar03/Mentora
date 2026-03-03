@@ -42,8 +42,9 @@ exports.getWelfareDashboard = async (req, res) => {
       if (!latestAssessment) return;
 
       const score = latestAssessment.Mental_health_Risk_Status;
+      console.log(`[Welfare Risk Check] Student ${s.name} (${sId}) Risk Score:`, score);
       
-      if (score > 65) {
+      if (score >= 70) {
         highRiskCount++;
         highRiskStudents.push({
           id: sId,
@@ -60,7 +61,7 @@ exports.getWelfareDashboard = async (req, res) => {
            message: `${s.name} from ${s.department} detected with critical stress markers.`,
            time: "Just now" 
         });
-      } else if (score >= 36) {
+      } else if (score >= 40) {
         mediumRiskCount++;
       } else {
         lowRiskCount++;

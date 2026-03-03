@@ -22,6 +22,8 @@ server/python_ml/api/__pycache__/
 *.pyo
 *.pyd
 *.pkl           # ML model — large binary, not version-controlled
+server/python_ml/*.pkl
+server/python_ml/api/*.pkl
 
 # ─── Build Outputs ───────────────────────────────────────────────────
 dist/

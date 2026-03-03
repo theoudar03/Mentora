@@ -1,27 +1,33 @@
 import React from 'react';
 
-const OptionSelector = ({ options, selectedValue, onSelect }) => {
+const OptionSelector = ({ questionId, options, selectedValue, onSelect }) => {
+  if (!options || !Array.isArray(options)) return null;
+
   return (
-    <div className="flex flex-wrap gap-3 mt-5">
-      {options.map((option, index) => {
-        const isSelected = selectedValue === option.value;
+    <div className="flex flex-col gap-3 mt-4">
+      {options.map((opt) => {
+        const isSelected = selectedValue === opt.value;
         return (
-          <button
-            key={index}
-            onClick={() => onSelect(option.value)}
+          <label 
+            key={opt.value} 
             className={`
-              flex-1 min-w-[120px] px-4 py-3 rounded-xl border text-sm font-medium
-              transition-all duration-200 outline-none
-              ${
-                isSelected
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-[0_0_0_1px_rgba(99,102,241,1)]'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
-              }
+              flex items-center gap-3 p-4 rounded-xl border border-gray-200 cursor-pointer
+              transition-all duration-200
+              ${isSelected ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'hover:bg-gray-50 bg-white'}
             `}
-            type="button"
           >
-            {option.label}
-          </button>
+            <input
+              type="radio"
+              name={`question-${questionId}`}
+              value={opt.value}
+              checked={isSelected}
+              onChange={() => onSelect(opt.value)}
+              className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+            />
+            <span className={`text-sm font-medium ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
+              {opt.label}
+            </span>
+          </label>
         );
       })}
     </div>

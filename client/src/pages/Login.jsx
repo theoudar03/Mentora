@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/authApi';
+import { loginUser, getMe } from '../api/authApi';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const Login = () => {
   const [id_num, setIdNum] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -17,11 +19,20 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const response = await loginUser({ id_num, password });
-      login(response.data);
-      if (response.data.role === 'student') navigate('/student');
-      else if (response.data.role === 'mentor') navigate('/mentor');
-      else if (response.data.role === 'welfare') navigate('/welfare');
+      if (!id_num || !password) {
+        throw new Error('Please fill in all fields');
+      }
+
+      await loginUser({ id_num, password });
+      
+      // Fetch fresh DB data to ensure role is completely synchronized
+      const meResponse = await getMe();
+      login(meResponse.data);
+      
+      const { role } = meResponse.data;
+      if (role === 'student') navigate('/student');
+      else if (role === 'mentor') navigate('/mentor');
+      else if (role === 'welfare') navigate('/welfare');
       else navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
@@ -31,63 +42,92 @@ const Login = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-indigo-600 mb-1">Mentora</h1>
-          <p className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-2">Mental Health + Mentor</p>
-          <p className="text-gray-500">Sign in to your account</p>
+    <div className="flex min-h-screen bg-slate-50 font-sans">
+      <div className="hidden lg:flex lg:flex-1 bg-indigo-600 relative overflow-hidden items-center justify-center">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/50 to-indigo-900/80"></div>
+        <div className="absolute w-96 h-96 bg-white/10 blur-3xl rounded-full top-20 left-20"></div>
+        <div className="absolute w-[30rem] h-[30rem] bg-indigo-400/20 blur-3xl rounded-full bottom-0 right-0"></div>
+        <div className="relative z-10 p-12 text-white max-w-lg">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl">
+            <span className="text-3xl font-bold text-indigo-600 leading-none">M</span>
+          </div>
+          <h1 className="text-5xl font-bold mb-6 tracking-tight leading-tight">Elevating campus student wellbeing.</h1>
+          <p className="text-indigo-100 text-lg font-medium leading-relaxed opacity-90">
+            A secure AI-driven behavioral monitoring platform built for modern educational ecosystems.
+          </p>
         </div>
-        
-        {error && (
-          <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
-            <input
-              type="text"
-              value={id_num}
-              onChange={(e) => setIdNum(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Enter your ID"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="••••••••"
-              required
-            />
+      </div>
+      
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-12 md:p-24 relative">
+        <div className="w-full max-w-md bg-white p-8 sm:p-12 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="text-center mb-10">
+            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-6 lg:hidden shadow-lg">
+              <span className="text-2xl font-bold text-white leading-none">M</span>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Welcome Back</h2>
+            <p className="text-slate-500 font-medium">Please enter your secure credentials</p>
           </div>
           
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white font-medium py-2 px-4 rounded-md hover:bg-indigo-700 transition disabled:opacity-50"
-          >
-            {loading ? 'Authenticating...' : 'Sign In'}
-          </button>
-        </form>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">ID Number</label>
+              <input
+                type="text"
+                value={id_num}
+                onChange={(e) => {
+                  setIdNum(e.target.value);
+                  setError(null);
+                }}
+                className={`w-full px-4 py-3 bg-slate-50 border ${error ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
+                placeholder="0000"
+                required
+              />
+            </div>
 
-        {/* Credentials reference */}
-        <div className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100 text-xs text-gray-600">
-          <p className="font-semibold text-indigo-700 mb-2">🔑 Demo Credentials</p>
-          <div className="space-y-1">
-            <p><span className="font-medium">Welfare:</span> ADMIN001 / ADMIN001</p>
-            <p><span className="font-medium">Mentor:</span> MTR2f5c / MTR2f5c</p>
-            <p><span className="font-medium">Student:</span> STU2f30 / STU2f30</p>
-          </div>
-          <p className="mt-2 text-gray-400">Password = ID Number for all accounts</p>
+            <div className="relative">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
+                  className={`w-full pl-4 pr-12 py-3 bg-slate-50 border ${error ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
+                  placeholder="••••••••"
+                  required
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+            
+            {/* Inline Error fading in */}
+            {error && (
+              <div className="text-sm font-semibold text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100 flex items-center animate-in fade-in zoom-in-95 duration-300">
+                <span className="mr-2">⚠️</span> {error}
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-indigo-600 text-white font-semibold py-3.5 px-4 rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-70 disabled:pointer-events-none shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] flex items-center justify-center gap-2 mt-4"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Authenticating...
+                </>
+              ) : 'Sign In To Dashboard'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

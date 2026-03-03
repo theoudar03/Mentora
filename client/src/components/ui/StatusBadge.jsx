@@ -5,22 +5,22 @@ const StatusBadge = ({ level }) => {
   
   switch(level) {
     case 'High':
-      styleClasses = 'bg-red-100 text-red-600 border border-red-200';
+      styleClasses = 'bg-rose-100/50 text-rose-700 border border-rose-200/60 shadow-[0_0_8px_rgba(225,29,72,0.15)]';
       break;
     case 'Medium':
-      styleClasses = 'bg-yellow-100 text-yellow-600 border border-yellow-200';
+      styleClasses = 'bg-amber-100/50 text-amber-700 border border-amber-200/60 shadow-[0_0_8px_rgba(217,119,6,0.15)]';
       break;
     case 'Low':
     case 'Stable':
-      styleClasses = 'bg-green-100 text-green-600 border border-green-200';
+      styleClasses = 'bg-emerald-100/50 text-emerald-700 border border-emerald-200/60 shadow-[0_0_8px_rgba(5,150,105,0.15)]';
       break;
     default:
-      styleClasses = 'bg-gray-100 text-gray-600 border border-gray-200';
+      styleClasses = 'bg-slate-100/50 text-slate-600 border border-slate-200/60';
   }
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${styleClasses}`}>
-      {level}
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase ${styleClasses} transition-all`}>
+      {level === 'Stable' ? 'Low' : level}
     </span>
   );
 };

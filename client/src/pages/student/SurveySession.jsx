@@ -14,6 +14,7 @@ const SurveySession = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [riskScore, setRiskScore] = useState(null);
   const [error, setError] = useState(null);
 
   // Timer states
@@ -84,7 +85,7 @@ const SurveySession = () => {
   const handleSelect = (questionId, value) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: value
+      [questionId]: Number(value)
     }));
   };
 
@@ -99,6 +100,18 @@ const SurveySession = () => {
   };
 
   const submitFinal = async (currentAnswers, currentOtherDiscomfort, timeTaken) => {
+    const keys = Object.keys(currentAnswers);
+    if (keys.length !== 10) {
+      setError("Please answer all 10 questions before submitting.");
+      return;
+    }
+
+    const values = Object.values(currentAnswers);
+    if (values.some(v => isNaN(v) || v < 1 || v > 5)) {
+      setError("Invalid answer value detected. Please refresh and try again.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -110,7 +123,9 @@ const SurveySession = () => {
         time_taken_to_attend_survey: timeTaken
       };
       
-      await submitAssessment(payload);
+      const result = await submitAssessment(payload);
+      setRiskScore(result.data?.riskScore ?? null);
+      setAnswers({}); // clear state completely upon success
       setIsSuccess(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Submission failed.');
@@ -121,10 +136,10 @@ const SurveySession = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="h-6 w-32 bg-gray-200 rounded mb-4"></div>
-          <p className="text-gray-400">Loading secure session...</p>
+          <div className="h-6 w-32 bg-slate-200 rounded mb-4"></div>
+          <p className="text-slate-400 font-medium">Loading secure session...</p>
         </div>
       </div>
     );
@@ -132,21 +147,24 @@ const SurveySession = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
-          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
-            ✓
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 animate-in fade-in duration-700">
+        <div className="max-w-md w-full bg-white rounded-[2rem] border border-emerald-100 shadow-[0_8px_30px_rgb(16,185,129,0.12)] p-12 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -mt-20 z-0"></div>
+          <div className="relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl font-bold shadow-sm ring-4 ring-white">
+              ✓
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-3">Check-in Complete</h2>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              Your wellbeing insights have been securely updated. Thank you for taking the time to share how you're doing.
+            </p>
+            <button 
+              onClick={() => navigate('/student')}
+              className="bg-slate-900 text-white font-semibold py-3.5 px-8 rounded-xl hover:bg-slate-800 transition-colors shadow-sm w-full"
+            >
+              Back to Dashboard
+            </button>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Assessment Completed</h2>
-          <p className="text-gray-600 mb-6">
-            Your responses have been securely recorded.
-          </p>
-          <button 
-            onClick={() => navigate('/student')}
-            className="text-indigo-600 font-medium hover:text-indigo-800 hover:underline"
-          >
-            Return to Dashboard →
-          </button>
         </div>
       </div>
     );
@@ -154,23 +172,26 @@ const SurveySession = () => {
 
   if (!hasStarted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-indigo-100 shadow-sm p-10 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Ready to begin?</h1>
-          <div className="bg-amber-50 rounded-xl p-4 text-amber-800 text-sm mb-8 text-left border border-amber-100">
-            <p className="font-semibold mb-1">⚠️ Important Rules:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>This assessment is timed (120 seconds).</li>
-              <li>Once started, it cannot be paused.</li>
-              <li>Do not refresh or click back during the session.</li>
-            </ul>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="max-w-lg w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-2xl -mr-10 -mt-10 opacity-60"></div>
+          <div className="relative z-10">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-4">Ready to begin?</h1>
+            <div className="bg-amber-50 rounded-2xl p-5 text-amber-800 text-sm mb-8 text-left border border-amber-100/60">
+              <p className="font-semibold mb-2 text-amber-900">Session Rules:</p>
+              <ul className="list-disc pl-5 space-y-1.5 opacity-90">
+                <li>This assessment is timed (120 seconds).</li>
+                <li>Once started, it cannot be paused.</li>
+                <li>Do not refresh or click back during the session.</li>
+              </ul>
+            </div>
+            <button 
+              onClick={handleStart}
+              className="w-full bg-indigo-600 text-white rounded-xl px-6 py-4 font-semibold hover:bg-indigo-700 hover:-translate-y-0.5 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] text-lg tracking-wide"
+            >
+              Start Session
+            </button>
           </div>
-          <button 
-            onClick={handleStart}
-            className="w-full bg-indigo-600 text-white rounded-xl px-6 py-4 font-medium hover:bg-indigo-700 transition shadow-sm"
-          >
-            Start Check-In
-          </button>
         </div>
       </div>
     );
@@ -231,7 +252,7 @@ const SurveySession = () => {
               key={q._id}
               index={index}
               questionId={q._id}
-              questionText={q.question_text}
+              questionText={q.question || q.question_text || `Question ${index + 1}`}
               options={q.options}
               selectedValue={answers[q._id]}
               onSelect={handleSelect}
@@ -274,7 +295,15 @@ const SurveySession = () => {
               }
             `}
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Calculating Risk...
+              </span>
+            ) : 'Submit Assessment'}
           </button>
         </div>
       </div>

@@ -2,17 +2,17 @@ import React from 'react';
 
 const HighRiskStudentsTable = ({ students }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Critical High-Risk Interventions</h2>
-        <span className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full font-medium border border-red-100">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full transition-shadow hover:shadow-md">
+      <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-sm">
+        <h2 className="text-lg font-semibold text-slate-800 tracking-tight">Critical High-Risk Interventions</h2>
+        <span className="text-xs text-rose-600 bg-rose-50 px-3 py-1 rounded-full font-bold tracking-wider uppercase border border-rose-100/50">
           Action Required
         </span>
       </div>
       
       <div className="flex-1 overflow-x-auto min-h-[300px]">
         <table className="min-w-full text-sm text-left align-middle border-collapse">
-          <thead className="bg-gray-50/80 sticky top-0 border-b border-gray-100 z-10">
+          <thead className="bg-slate-50/80 sticky top-0 border-b border-slate-100 z-10 backdrop-blur-md">
             <tr>
               <th className="px-5 py-4 font-semibold text-gray-600">Student Name</th>
               <th className="px-5 py-4 font-semibold text-gray-600">Department</th>
@@ -25,32 +25,32 @@ const HighRiskStudentsTable = ({ students }) => {
           <tbody className="divide-y divide-gray-100">
             {students.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center py-10 text-gray-500">
+                <td colSpan="6" className="text-center py-10 text-slate-400 font-medium">
                   No critical students currently recorded.
                 </td>
               </tr>
             ) : students.map((student) => (
-              <tr key={student.id} className="hover:bg-red-50/10 transition-colors bg-white">
+              <tr key={student.id} className="hover:bg-slate-50/50 transition-colors bg-white">
                 <td className="px-5 py-4 whitespace-nowrap">
-                  <span className="font-medium text-gray-900">{student.name}</span>
+                  <span className="font-semibold text-slate-900">{student.name}</span>
                 </td>
-                <td className="px-5 py-4 text-gray-600">{student.department}</td>
+                <td className="px-5 py-4 text-slate-500 font-medium">{student.department}</td>
                 <td className="px-5 py-4">
-                  <span className="text-red-700 font-bold bg-red-50 px-2 py-1 rounded inline-block">
+                  <span className="text-rose-700 font-bold bg-rose-50 px-2 py-1 rounded-md inline-block">
                     {student.riskScore}
                   </span>
                 </td>
                 <td className="px-5 py-4 text-center">
-                  <span className={`px-2 py-1 rounded inline-block text-xs font-medium uppercase tracking-wide
-                    ${student.timeTaken < 30 ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'text-gray-500 bg-gray-50'}`}>
+                  <span className={`px-2 py-1 rounded-md inline-block text-xs font-bold uppercase tracking-wider
+                    ${student.timeTaken < 30 ? 'bg-amber-100 text-amber-800 border-none' : 'text-slate-400 bg-slate-50'}`}>
                     {student.timeTaken}s
                   </span>
                 </td>
-                <td className="px-5 py-4 text-gray-500 hidden md:table-cell">
+                <td className="px-5 py-4 text-slate-400 font-medium hidden md:table-cell">
                   {student.mentor}
                 </td>
                 <td className="px-5 py-4 text-center">
-                  <button className="bg-white border border-gray-200 text-indigo-600 font-medium hover:bg-indigo-50 hover:border-indigo-200 px-4 py-2 rounded-lg transition-colors whitespace-nowrap text-sm shadow-sm">
+                  <button className="text-indigo-600 font-semibold hover:text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-all inline-flex items-center justify-center whitespace-nowrap border border-transparent hover:border-indigo-100">
                     Send Support &rarr;
                   </button>
                 </td>
