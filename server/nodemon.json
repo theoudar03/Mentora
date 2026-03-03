@@ -1,0 +1,6 @@
+{
+  "signal": "SIGTERM",
+  "kill": true,
+  "delay": 500,
+  "ignore": ["*.test.js", "seed_*.js", "reset_*.js", "*_validator.js", "analyzer.py"]
+}
