@@ -23,7 +23,12 @@ const Login = () => {
         throw new Error('Please fill in all fields');
       }
 
-      await loginUser({ id_num, password });
+      const loginResponse = await loginUser({ id_num, password });
+      
+      // Save JWT to localStorage for cross-domain Bearer token auth
+      if (loginResponse.data.token) {
+        localStorage.setItem('token', loginResponse.data.token);
+      }
       
       // Fetch fresh DB data to ensure role is completely synchronized
       const meResponse = await getMe();

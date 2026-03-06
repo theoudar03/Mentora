@@ -70,6 +70,7 @@ exports.register = async (req, res) => {
       });
   
       res.json({
+        token: jwtToken,
         name: user.name,
         role: user.role,
         department: user.department

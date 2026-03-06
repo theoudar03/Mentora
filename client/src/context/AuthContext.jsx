@@ -29,9 +29,11 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await logoutUser();
-      setUser(null);
     } catch(err) {
       console.error(err);
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
     }
   };
 
