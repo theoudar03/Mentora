@@ -30,6 +30,19 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
+const connectDB = require('./config/db');
+
+// Add DB connection middleware for serverless
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("Database connection failed:", err.message);
+    res.status(500).json({ message: "Database connection failed", error: err.message });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/survey', surveyQuestionRoutes);
