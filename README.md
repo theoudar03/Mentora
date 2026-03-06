@@ -1,4 +1,4 @@
-# SAFEHARBOR — AI-Based Student Mental Health Safety & Support System
+# MENTORA — AI-Based Student Mental Health Safety & Support System
 
 A production-ready MERN stack starter architecture designed for modular scale, clear role-based access, and simple integration for future AI/ML tools.
 
