@@ -110,7 +110,7 @@ const SurveySession = () => {
     }
 
     const values = Object.values(currentAnswers);
-    if (values.some(v => isNaN(v) || v < 1 || v > 5)) {
+    if (values.some(v => isNaN(v) || v < 0 || v > 4)) {
       setError("Invalid answer value detected. Please refresh and try again.");
       return;
     }
