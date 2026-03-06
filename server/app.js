@@ -45,12 +45,12 @@ app.use('/api/chat', chatRoutes);
 // Health check route
 const mongoose = require('mongoose');
 app.get('/api/health/db', (req, res) => {
-  // Check if Mongoose connection is ready (readyState 1 = connected)
-  if (mongoose.connection.readyState === 1) {
-    res.status(200).json({ status: "MongoDB Connected" });
-  } else {
-    res.status(500).json({ status: "MongoDB Disconnected" });
-  }
+  // Check if Mongoose connection is ready
+  res.status(200).json({ 
+    status: mongoose.connection.readyState === 1 ? "MongoDB Connected" : "MongoDB Disconnected",
+    state: mongoose.connection.readyState,
+    hasUri: !!process.env.MONGO_URI
+  });
 });
 
 // Error Handling Middleware (Placeholder)
