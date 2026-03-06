@@ -3,18 +3,21 @@ const WeeklyAssessment = require('../models/WeeklyAssessment');
 const Student      = require('../models/Student');
 const SurveyQ      = require('../models/SurveyQuestion');
 const { predictRisk } = require('../services/mlService');
+const { getWeekNumber } = require('../utils/getCurrentWeek');
 
 // ─── Factor extraction — all logic server-side, never exposed to frontend ─────
 function computeFactors(values) {
   if (values.length !== 10) throw new Error('Exactly 10 answer values required.');
+  // Survey options are 0–4 (Never→Always). Normalize to 1–5 for ML model compatibility.
+  const v = values.map(x => x + 1);
   return {
-    academic_pressure_score: Math.round((values[0] + values[1]) / 2),
-    anxiety_score:           Math.round((values[2] + values[3]) / 2),
-    family_support_score:    Math.round((values[4] + values[5]) / 2),
-    loneliness_score:        values[6],
-    sleep_quality_score:     values[7],
-    campus_belonging_score:  values[8],
-    perceived_stress_score:  values[9],
+    academic_pressure_score: Math.round((v[0] + v[1]) / 2),
+    anxiety_score:           Math.round((v[2] + v[3]) / 2),
+    family_support_score:    Math.round((v[4] + v[5]) / 2),
+    loneliness_score:        v[6],
+    sleep_quality_score:     v[7],
+    campus_belonging_score:  v[8],
+    perceived_stress_score:  v[9],
   };
 }
 
@@ -69,16 +72,20 @@ exports.submitAssessment = async (req, res) => {
       });
     }
 
-    // ── 3. Fetch active survey questions sorted by order_index ────────────
+    // ── 3. Fetch the current week's active survey questions ──────────────
+    // Must match the same set the student was shown (weekly rotation)
+    const weekNumber = getWeekNumber();
+    const surveySet = (weekNumber % 5) + 1;
+
     const questions = await SurveyQ
-      .find({ is_active: true })
+      .find({ is_active: true, survey_set: surveySet })
       .sort({ order_index: 1 })
       .lean()
       .exec();
 
     if (questions.length !== 10) {
       return res.status(500).json({
-        message: `Survey config error: expected 10 active questions, found ${questions.length}.`
+        message: `Survey config error: expected 10 active questions for set ${surveySet}, found ${questions.length}. Please run the seed script.`
       });
     }
 
@@ -91,18 +98,17 @@ exports.submitAssessment = async (req, res) => {
 
     // Sort answers by their question's order_index
     const sortedAnswers = [...answers].sort((a, b) => {
-      // support both 'questionId' and 'question_id' from frontend
       const aId = a.questionId || a.question_id;
       const bId = b.questionId || b.question_id;
       return (qPositionMap[aId] ?? 99) - (qPositionMap[bId] ?? 99);
     });
 
-    // Extract and validate numeric values (1–5)
+    // Extract and validate numeric values (0–4, matching seed data options)
     for (let i = 0; i < sortedAnswers.length; i++) {
       const a = sortedAnswers[i];
       const v = Number(a.value);
-      if (isNaN(v) || v < 1 || v > 5) {
-        return res.status(400).json({ message: `Answer #${i + 1} value "${a.value}" is invalid. Must be 1–5.` });
+      if (isNaN(v) || v < 0 || v > 4) {
+        return res.status(400).json({ message: `Answer #${i + 1} value "${a.value}" is invalid. Must be 0–4.` });
       }
     }
     const values = sortedAnswers.map(a => Number(a.value));
