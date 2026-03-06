@@ -2,10 +2,8 @@ require('dotenv').config();
 const app = require('./app');
 const connectDB = require('./config/db');
 
-// Connect to DB immediately for serverless warmups
-connectDB().catch(err => {
-  console.error('Failed to connect to database', err);
-});
+// We explicitly delay DB connection until proper Express middleware catches the request 
+// to prevent unresolved Promise deadlocks inside the serverless functions container.
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
