@@ -75,8 +75,8 @@ exports.register = async (req, res) => {
         department: user.department
       });
     } catch (error) {
-      console.error('Login error:', error.message);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Login error:', error.message, error.stack);
+      res.status(500).json({ message: `Server error: ${error.message}` });
     }
   };
 
