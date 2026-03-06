@@ -6,7 +6,12 @@ const connectDB = async () => {
       console.warn("MONGO_URI is missing, skipping DB connect for now.");
       return;
     }
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    // Clean the URI just in case it was pasted into Render with literal quotes or spaces
+    let uri = process.env.MONGO_URI.trim();
+    if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
+      uri = uri.slice(1, -1);
+    }
+    const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host} / DB: ${conn.connection.name}`);
   } catch (error) {
     console.error(`MongoDB Connection Protocol Error (Is IP Allowlisted?): ${error.message}`);
