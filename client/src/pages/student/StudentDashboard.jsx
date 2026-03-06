@@ -170,15 +170,15 @@ const StudentDashboard = () => {
           {isLoadingPw ? (
             <div className="h-8 w-32 bg-slate-100 animate-pulse rounded-full"></div>
           ) : pwStatus?.canChange ? (
-            <div className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 shadow-sm">
+            <span className="bg-emerald-100/80 text-emerald-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide shadow-sm flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Eligible to change
-            </div>
+              Eligible to update password
+            </span>
           ) : (
-            <div className="bg-amber-50 text-amber-700 border border-amber-200/60 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide flex items-center gap-2 shadow-sm">
+            <span className="bg-amber-100/80 text-amber-700 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide shadow-sm flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Available in {pwStatus?.remainingDays} days
-            </div>
+              Available in {pwStatus?.remainingDays} day(s)
+            </span>
           )}
         </div>
 

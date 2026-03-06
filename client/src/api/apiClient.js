@@ -1,9 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  // Use relative URL — Vite proxy forwards /api → localhost:5000/api
-  // This keeps everything same-origin so HTTP-only cookies work correctly
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

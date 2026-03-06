@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { loginUser, getMe } from '../api/authApi';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle, UserX, KeyRound, ServerCrash } from 'lucide-react';
 
 const Login = () => {
   const [id_num, setIdNum] = useState('');
@@ -35,11 +35,55 @@ const Login = () => {
       else if (role === 'welfare') navigate('/welfare');
       else navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
+
+  const getErrorVisual = (errorMsg) => {
+    if (!errorMsg) return null;
+    
+    if (errorMsg.toLowerCase().includes('wrong user id') || errorMsg.toLowerCase().includes('user not found')) {
+      return {
+        icon: <UserX className="w-6 h-6" />,
+        title: 'Account Not Found',
+        message: 'The User ID you entered doesn\'t belong to an account. Please check your ID and try again.',
+        color: 'rose',
+        field: 'id'
+      };
+    }
+    
+    if (errorMsg.toLowerCase().includes('wrong password') || errorMsg.toLowerCase().includes('invalid password')) {
+      return {
+        icon: <KeyRound className="w-6 h-6" />,
+        title: 'Incorrect Password',
+        message: 'The password you entered is incorrect. Please try again.',
+        color: 'orange',
+        field: 'password'
+      };
+    }
+    
+    if (errorMsg.toLowerCase().includes('server') || errorMsg.toLowerCase().includes('network')) {
+      return {
+        icon: <ServerCrash className="w-6 h-6" />,
+        title: 'Connection Error',
+        message: 'We are unable to connect to our servers right now. Please try again later.',
+        color: 'red',
+        field: 'none'
+      };
+    }
+    
+    return {
+      icon: <AlertCircle className="w-6 h-6" />,
+      title: 'Sign In Error',
+      message: errorMsg,
+      color: 'rose',
+      field: 'all'
+    };
+  };
+
+  const errorVisual = getErrorVisual(error);
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
@@ -69,6 +113,36 @@ const Login = () => {
           </div>
           
           <form onSubmit={handleLogin} className="space-y-6">
+            
+            {/* Conditional Error Display */}
+            {errorVisual && (
+              <div className={`p-4 rounded-xl border flex gap-3.5 items-start shadow-sm animate-in zoom-in-95 duration-300 ${
+                errorVisual.color === 'orange' ? 'bg-orange-50/80 border-orange-200/80 text-orange-900' :
+                errorVisual.color === 'red' ? 'bg-red-50/80 border-red-200/80 text-red-900' :
+                'bg-rose-50/80 border-rose-200/80 text-rose-900'
+              }`}>
+                <div className={`mt-0.5 p-1.5 rounded-lg ${
+                  errorVisual.color === 'orange' ? 'bg-orange-100 text-orange-600' :
+                  errorVisual.color === 'red' ? 'bg-red-100 text-red-600' :
+                  'bg-rose-100 text-rose-600'
+                }`}>
+                  {errorVisual.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold tracking-tight">
+                    {errorVisual.title}
+                  </h3>
+                  <p className={`text-[13px] mt-1 font-medium ${
+                    errorVisual.color === 'orange' ? 'text-orange-800/90' :
+                    errorVisual.color === 'red' ? 'text-red-800/90' :
+                    'text-rose-800/90'
+                  }`}>
+                    {errorVisual.message}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">ID Number</label>
               <input
@@ -78,7 +152,11 @@ const Login = () => {
                   setIdNum(e.target.value);
                   setError(null);
                 }}
-                className={`w-full px-4 py-3 bg-slate-50 border ${error ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
+                className={`w-full px-4 py-3 bg-slate-50 border ${
+                  (errorVisual?.field === 'id' || errorVisual?.field === 'all') 
+                    ? 'border-rose-400 focus:ring-rose-500 focus:border-rose-500 bg-rose-50/30' 
+                    : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                } rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
                 placeholder="0000"
                 required
               />
@@ -94,7 +172,11 @@ const Login = () => {
                     setPassword(e.target.value);
                     setError(null);
                   }}
-                  className={`w-full pl-4 pr-12 py-3 bg-slate-50 border ${error ? 'border-rose-300 focus:ring-rose-500 focus:border-rose-500' : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'} rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
+                  className={`w-full pl-4 pr-12 py-3 bg-slate-50 border ${
+                    (errorVisual?.field === 'password' || errorVisual?.field === 'all') 
+                      ? 'border-orange-400 focus:ring-orange-500 focus:border-orange-500 bg-orange-50/30' 
+                      : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'
+                  } rounded-xl focus:bg-white focus:ring-2 transition-all font-medium text-slate-900 placeholder:text-slate-400`}
                   placeholder="••••••••"
                   required
                 />
@@ -107,13 +189,6 @@ const Login = () => {
                 </button>
               </div>
             </div>
-            
-            {/* Inline Error fading in */}
-            {error && (
-              <div className="text-sm font-semibold text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100 flex items-center animate-in fade-in zoom-in-95 duration-300">
-                <span className="mr-2">⚠️</span> {error}
-              </div>
-            )}
             
             <button
               type="submit"

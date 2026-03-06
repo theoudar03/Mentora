@@ -36,49 +36,49 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
-  try {
-    const { id_num, password } = req.body;
-    
-    console.log(`Login attempt: ${id_num}`);
-
-    if (!id_num || !password) {
-      return res.status(400).json({ message: 'Please provide ID Number and password' });
+  exports.login = async (req, res) => {
+    try {
+      const { id_num, password } = req.body;
+      
+      console.log(`Login attempt: ${id_num}`);
+  
+      if (!id_num || !password) {
+        return res.status(400).json({ message: 'Please provide ID Number and password' });
+      }
+  
+      const user = await User.findOne({ id_num });
+      console.log(`User found: ${user ? 'yes' : 'no'}`);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Wrong User ID' });
+      }
+      
+      const isMatch = await user.matchPassword(password);
+      console.log(`Password match: ${isMatch ? 'true' : 'false'}`);
+  
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Wrong Password' });
+      }
+  
+      const jwtToken = generateToken(user._id);
+  
+      res.cookie("token", jwtToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+  
+      res.json({
+        name: user.name,
+        role: user.role,
+        department: user.department
+      });
+    } catch (error) {
+      console.error('Login error:', error.message);
+      res.status(500).json({ message: 'Server error' });
     }
-
-    const user = await User.findOne({ id_num });
-    console.log(`User found: ${user ? 'yes' : 'no'}`);
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid ID Number or password' });
-    }
-    
-    const isMatch = await user.matchPassword(password);
-    console.log(`Password match: ${isMatch ? 'true' : 'false'}`);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid ID Number or password' });
-    }
-
-    const jwtToken = generateToken(user._id);
-
-    res.cookie("token", jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-
-    res.json({
-      name: user.name,
-      role: user.role,
-      department: user.department
-    });
-  } catch (error) {
-    console.error('Login error:', error.message);
-    res.status(401).json({ message: 'Authentication failed' });
-  }
-};
+  };
 
 exports.logout = (req, res) => {
   res.cookie('token', '', {

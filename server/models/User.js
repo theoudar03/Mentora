@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   department: String,
   ref_id: String, // links to student/mentor/welfare collection
   created_at: { type: Date, default: Date.now },
-  last_password_change: { type: Date, default: null }
+  password_last_changed_at: { type: Date, default: null }
 });
 
 // Password hashing middleware

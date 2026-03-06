@@ -2,9 +2,14 @@ require('dotenv').config();
 const app = require('./app');
 const connectDB = require('./config/db');
 
-const PORT = process.env.PORT || 5000;
+// Connect to DB immediately for serverless warmups
+connectDB().catch(err => {
+  console.error('Failed to connect to database', err);
+});
 
-connectDB().then(() => {
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
   const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
@@ -17,8 +22,7 @@ connectDB().then(() => {
       throw err;
     }
   });
+}
 
-}).catch(err => {
-  console.error('Failed to connect to database', err);
-  process.exit(1);
-});
+// Export for Vercel serverless execution
+module.exports = app;

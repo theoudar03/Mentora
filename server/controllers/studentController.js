@@ -34,18 +34,22 @@ exports.changePassword = async (req, res) => {
 
     // Enforce 14-day rule
     const now = new Date();
-    const lastChanged = user.last_password_change || user.created_at;
-    const daysDifference = (now - lastChanged) / (1000 * 60 * 60 * 24);
+    const lastChanged = user.password_last_changed_at || user.created_at;
+    const diffDays = (now - lastChanged) / (1000 * 60 * 60 * 24);
 
-    if (daysDifference < 14) {
-      const remainingDays = Math.ceil(14 - daysDifference);
+    console.log("[Password Change Check] User:", user.id_num);
+    console.log("[Password Change Check] Last changed:", lastChanged);
+    console.log("[Password Change Check] Diff days:", diffDays);
+
+    if (diffDays < 14) {
+      const remainingDays = Math.ceil(14 - diffDays);
       return res.status(403).json({
         message: `Password can only be changed after ${remainingDays} day(s).`
       });
     }
 
     user.password = newPassword; // Gets hashed in pre-save hook
-    user.last_password_change = now;
+    user.password_last_changed_at = now;
     await user.save();
 
     res.status(200).json({ message: 'Password updated successfully' });
@@ -60,23 +64,28 @@ exports.getPasswordStatus = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User profile not found' });
 
     const now = new Date();
-    const lastChanged = user.last_password_change || user.created_at;
-    const daysDifference = (now - lastChanged) / (1000 * 60 * 60 * 24);
+    const lastChanged = user.password_last_changed_at || user.created_at;
+    const diffDays = (now - lastChanged) / (1000 * 60 * 60 * 24);
 
-    let canChange = true;
-    let remainingDays = 0;
-    let nextEligibleDate = now;
+    console.log("[Password Status Check] User:", user.id_num);
+    console.log("[Password Status Check] Last changed:", lastChanged);
+    console.log("[Password Status Check] Diff days:", diffDays);
 
-    if (daysDifference < 14) {
-      canChange = false;
-      remainingDays = Math.ceil(14 - daysDifference);
-      nextEligibleDate = new Date(lastChanged.getTime() + (14 * 24 * 60 * 60 * 1000));
+    const remainingDays = Math.ceil(14 - diffDays);
+
+    if (diffDays >= 14) {
+      return res.status(200).json({
+        canChange: true,
+        remainingDays: 0,
+        nextEligibleDate: null,
+        lastChangedAt: lastChanged.toISOString().split('T')[0]
+      });
     }
 
     res.status(200).json({
-      canChange,
-      remainingDays,
-      nextEligibleDate: nextEligibleDate.toISOString().split('T')[0],
+      canChange: false,
+      remainingDays: remainingDays,
+      nextEligibleDate: new Date(lastChanged.getTime() + (14 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
       lastChangedAt: lastChanged.toISOString().split('T')[0]
     });
   } catch (error) {
