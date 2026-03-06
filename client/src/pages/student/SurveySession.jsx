@@ -213,11 +213,11 @@ const SurveySession = () => {
   const isLowTime = timeLeft <= 10;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gray-50 py-6 px-3 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
               Weekly Wellbeing Check-In
             </h1>
             {weekNumber !== null && (

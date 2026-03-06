@@ -103,7 +103,7 @@ const MentorDashboard = () => {
         <div className="mt-4 md:mt-0 flex items-center gap-4">
           <button 
             onClick={() => setShowAddModal(true)}
-            className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
           >
             <span className="text-lg leading-none">+</span> Add Student
           </button>
@@ -123,8 +123,8 @@ const MentorDashboard = () => {
       <AIInsightBanner />
 
       {/* Row 1: Summary Cards & Donut */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <RiskSummaryCard 
             title="High Risk Students" 
             count={riskSummary.highRisk}
@@ -150,13 +150,11 @@ const MentorDashboard = () => {
       </div>
 
       {/* Row 2: Analytics & Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex min-h-[400px]">
-          {/* Main Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 flex min-h-[300px] sm:min-h-[400px]">
           <RiskTrendChart data={trendData} />
         </div>
-        <div className="lg:col-span-1 flex min-h-[400px]">
-          {/* Side Panel */}
+        <div className="lg:col-span-1 flex min-h-[300px] sm:min-h-[400px]">
           <RecentAlerts alerts={alerts} />
         </div>
       </div>

@@ -318,7 +318,7 @@ const ChatPage = () => {
   );
 
   return (
-    <div className="flex h-[calc(100vh-0px)] bg-white overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] bg-white overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -my-6">
       <Sidebar />
       <ChatWindow />
     </div>

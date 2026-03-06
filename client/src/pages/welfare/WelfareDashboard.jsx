@@ -71,7 +71,7 @@ const WelfareDashboard = () => {
       </div>
 
       {/* Row 1: Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <WelfareSummaryCard 
           title="Monitored Students" 
           count={summary.totalMonitored}
@@ -102,21 +102,21 @@ const WelfareDashboard = () => {
       <WelfareInsightPanel message={aiInsight || "Analyzing wellness metrics..."} />
 
       {/* Row 2: Charts (Grid 3 cols) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 min-h-[350px]">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="xl:col-span-2 min-h-[280px] sm:min-h-[350px]">
           <DepartmentStressChart data={departmentStress} />
         </div>
-        <div className="xl:col-span-1 min-h-[350px]">
+        <div className="xl:col-span-1 min-h-[280px] sm:min-h-[350px]">
           <RiskDistributionPie data={riskDistribution} />
         </div>
       </div>
 
       {/* Row 3: Table and Alerts */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         <div className="xl:col-span-2">
           <HighRiskStudentsTable students={highRiskStudents} />
         </div>
-        <div className="xl:col-span-1 min-h-[400px]">
+        <div className="xl:col-span-1 min-h-[300px] sm:min-h-[400px]">
           <WelfareAlerts alerts={alerts} />
         </div>
       </div>

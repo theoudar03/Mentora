@@ -78,20 +78,20 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Personal Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex items-center gap-6 relative overflow-hidden group">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 transition-transform group-hover:scale-110 duration-700"></div>
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-3xl font-bold shadow-lg shadow-indigo-200 z-10">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg shadow-indigo-200 z-10">
           {user?.name?.charAt(0) || 'S'}
         </div>
         <div className="z-10">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">Welcome back, {user?.name || 'Student'}</h1>
-          <div className="flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mb-1">Welcome back, {user?.name || 'Student'}</h1>
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold tracking-wide uppercase">
               {user?.department || 'Department'}
             </span>
-            <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+            <span className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active Status
             </span>
           </div>
@@ -138,7 +138,7 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
           <h3 className="font-semibold text-slate-800 mb-1">Resources</h3>
           <p className="text-sm text-slate-500 mb-4">Access campus wellbeing links.</p>
@@ -156,9 +156,9 @@ const StudentDashboard = () => {
       </div>
 
       {/* Password Change Section */}
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+      <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-2 h-full bg-slate-900"></div>
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ShieldCheck className="w-5 h-5 text-slate-700" />
@@ -182,7 +182,7 @@ const StudentDashboard = () => {
           )}
         </div>
 
-        <div className="bg-slate-50 rounded-xl p-4 mb-8 border border-slate-100 flex items-center justify-between text-sm">
+        <div className="bg-slate-50 rounded-xl p-4 mb-6 sm:mb-8 border border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
           <div className="text-slate-600">
             <span className="font-semibold text-slate-800">Last changed:</span> {pwStatus?.lastChangedAt || 'Recently'}
           </div>
@@ -208,7 +208,7 @@ const StudentDashboard = () => {
             </button>
           </div>
         ) : (
-          <form onSubmit={handlePasswordChange} className="max-w-md space-y-5">
+          <form onSubmit={handlePasswordChange} className="w-full max-w-md space-y-5">
             <div className="relative">
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Current Password</label>
               <div className="relative">
