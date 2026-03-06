@@ -9,6 +9,7 @@ const SurveySession = () => {
   const navigate = useNavigate();
   const [hasStarted, setHasStarted] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [weekNumber, setWeekNumber] = useState(null);
   const [answers, setAnswers] = useState({});
   const [otherDiscomfort, setOtherDiscomfort] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +51,9 @@ const SurveySession = () => {
       try {
         setIsLoading(true);
         const res = await fetchSurveyQuestions();
-        setQuestions(res.data);
+        // Since we upgraded to dynamic weekly API, the response has a `questions` array.
+        setQuestions(res.data.questions || res.data);
+        if (res.data.week_number) setWeekNumber(res.data.week_number);
       } catch (err) {
         setError('Failed to load questions. Please try again.');
       } finally {
@@ -213,11 +216,18 @@ const SurveySession = () => {
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Weekly Wellbeing Check-In
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Weekly Wellbeing Check-In
+            </h1>
+            {weekNumber !== null && (
+              <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full border border-indigo-200">
+                Week {weekNumber}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-500 mt-1">
-            Stay focused. Your responses help us support you.
+            This short check-in helps mentors understand overall student wellbeing trends.
           </p>
         </div>
         

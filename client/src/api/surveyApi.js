@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
 
 export const fetchSurveyQuestions = () => {
-  return apiClient.get('/survey/questions');
+  return apiClient.get('/survey/weekly');
 };

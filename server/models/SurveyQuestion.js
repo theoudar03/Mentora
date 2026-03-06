@@ -7,6 +7,7 @@ const surveyQuestionSchema = new mongoose.Schema({
   category:     { type: String },               // legacy
   options:      { type: mongoose.Schema.Types.Mixed },  // array of strings or {label,value}
   order_index:  { type: Number, required: true },
+  survey_set:   { type: Number },
   is_active:    { type: Boolean, default: true },
   created_at:   { type: Date, default: Date.now }
 }, { strict: false }); // allow whichever shape was inserted

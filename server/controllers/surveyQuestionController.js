@@ -1,4 +1,5 @@
 const SurveyQuestion = require('../models/SurveyQuestion');
+const { getWeekNumber } = require('../utils/getCurrentWeek');
 
 exports.getQuestions = async (req, res) => {
   try {
@@ -19,5 +20,28 @@ exports.getQuestions = async (req, res) => {
     res.status(200).json(normalizedQuestions);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching survey questions', error: error.message });
+  }
+};
+
+exports.getWeeklySurvey = async (req, res) => {
+  try {
+    const weekNumber = getWeekNumber();
+    const surveySet = (weekNumber % 5) + 1;
+
+    const questions = await SurveyQuestion.find({ 
+      survey_set: surveySet, 
+      is_active: true 
+    })
+    .sort({ order_index: 1 })
+    .lean()
+    .exec();
+
+    res.status(200).json({
+      survey_set: surveySet,
+      week_number: weekNumber,
+      questions: questions
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching weekly survey', error: error.message });
   }
 };
